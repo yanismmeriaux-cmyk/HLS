@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MotoDesk CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #0a0a0a;
+    --dark: #111214;
+    --card: #16181c;
+    --border: #242529;
+    --orange: #ff5c1a;
+    --orange-dim: rgba(255,92,26,0.12);
+    --white: #f0ede8;
+    --muted: #6b6e75;
+    --green: #22c55e;
+    --yellow: #f59e0b;
+    --red: #ef4444;
+    --ai: #a78bfa;
+    --ai-dim: rgba(167,139,250,0.10);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--black); color:var(--white); font-family:'DM Sans',sans-serif; min-height:100vh; display:flex; overflow:hidden; }
+
+  .sidebar { width:220px; min-width:220px; background:var(--dark); border-right:1px solid var(--border); display:flex; flex-direction:column; height:100vh; }
+  .logo { padding:24px 20px 20px; border-bottom:1px solid var(--border); }
+  .logo-text { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:2px; color:var(--white); line-height:1; }
+  .logo-text span { color:var(--orange); }
+  .logo-sub { font-family:'Space Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:3px; text-transform:uppercase; margin-top:3px; }
+  .nav { flex:1; padding:16px 12px; display:flex; flex-direction:column; gap:2px; }
+  .nav-section { font-family:'Space Mono',monospace; font-size:9px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; padding:12px 8px 6px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:6px; cursor:pointer; transition:all 0.15s; font-size:13.5px; font-weight:400; color:var(--muted); }
+  .nav-item:hover { background:rgba(255,255,255,0.04); color:var(--white); }
+  .nav-item.active { background:var(--orange-dim); color:var(--white); font-weight:500; }
+  .nav-item.active .nav-icon { color:var(--orange); }
+  .nav-item.ai-nav.active { background:var(--ai-dim); }
+  .nav-item.ai-nav.active .nav-icon { color:var(--ai); }
+  .nav-icon { font-size:16px; width:18px; text-align:center; }
+  .badge { margin-left:auto; background:var(--orange); color:white; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; font-family:'Space Mono',monospace; }
+  .badge.green { background:var(--green); }
+  .badge.ai { background:var(--ai); }
+  .sidebar-footer { padding:16px; border-top:1px solid var(--border); }
+  .garage-info { display:flex; align-items:center; gap:10px; }
+  .garage-avatar { width:32px; height:32px; background:var(--orange-dim); border:1px solid var(--orange); border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:14px; }
+  .garage-name { font-size:12px; font-weight:600; color:var(--white); }
+  .garage-plan { font-size:10px; color:var(--orange); font-family:'Space Mono',monospace; }
+
+  .main { flex:1; display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+  .topbar { height:58px; background:var(--dark); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 24px; gap:16px; flex-shrink:0; }
+  .page-title { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1.5px; color:var(--white); flex:1; }
+  .search-bar { display:flex; align-items:center; gap:8px; background:var(--card); border:1px solid var(--border); border-radius:7px; padding:7px 14px; width:240px; }
+  .search-bar input { background:none; border:none; outline:none; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--white); width:100%; }
+  .search-bar input::placeholder { color:var(--muted); }
+  .btn { display:flex; align-items:center; gap:7px; padding:8px 16px; border-radius:7px; border:none; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:13px; font-weight:500; transition:all 0.15s; }
+  .btn-primary { background:var(--orange); color:white; }
+  .btn-primary:hover { background:#e04a10; }
+  .btn-ghost { background:var(--card); color:var(--white); border:1px solid var(--border); }
+  .btn-ghost:hover { border-color:var(--orange); color:var(--orange); }
+  .btn-ai { background:var(--ai-dim); color:var(--ai); border:1px solid rgba(167,139,250,0.3); }
+  .btn-ai:hover { background:rgba(167,139,250,0.2); }
+
+  .view { display:none; flex:1; overflow:hidden; flex-direction:column; }
+  .view.active { display:flex; }
+  .ai-view { display:none; flex:1; overflow:hidden; flex-direction:column; }
+  .ai-view.active { display:flex; }
+
+  .content { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:20px; }
+  .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .kpi-card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:18px 20px; position:relative; overflow:hidden; transition:border-color 0.2s; animation:fadeIn 0.3s ease both; }
+  .kpi-card:hover { border-color:var(--orange); }
+  .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--orange); opacity:0; transition:opacity 0.2s; }
+  .kpi-card:hover::before { opacity:1; }
+  .kpi-label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1.5px; font-family:'Space Mono',monospace; margin-bottom:8px; }
+  .kpi-value { font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:1px; color:var(--white); line-height:1; margin-bottom:6px; }
+  .kpi-delta { font-size:12px; font-weight:500; display:flex; align-items:center; gap:4px; }
+  .kpi-delta.up { color:var(--green); }
+  .kpi-delta.down { color:var(--red); }
+  .kpi-icon { position:absolute; right:16px; top:16px; font-size:22px; opacity:0.15; }
+  .two-col { display:grid; grid-template-columns:1fr 340px; gap:16px; }
+  .section-card { background:var(--card); border:1px solid var(--border); border-radius:10px; overflow:hidden; animation:fadeIn 0.35s ease 0.2s both; }
+  .section-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border); }
+  .section-title { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:1.5px; color:var(--white); }
+  .section-sub { font-size:11px; color:var(--muted); margin-top:1px; font-family:'Space Mono',monospace; }
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  th { text-align:left; font-size:10px; font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); padding:10px 20px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  td { padding:12px 20px; font-size:13px; border-bottom:1px solid rgba(36,37,41,0.5); vertical-align:middle; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,0.02); }
+  .client-cell { display:flex; align-items:center; gap:10px; }
+  .avatar { width:30px; height:30px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; }
+  .client-name { font-weight:500; color:var(--white); }
+  .client-moto { font-size:11px; color:var(--muted); margin-top:1px; }
+  .status-pill { display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; font-family:'Space Mono',monospace; }
+  .status-pill::before { content:''; width:5px; height:5px; border-radius:50%; }
+  .pill-en-cours { background:rgba(245,158,11,0.12); color:var(--yellow); }
+  .pill-en-cours::before { background:var(--yellow); }
+  .pill-termine { background:rgba(34,197,94,0.12); color:var(--green); }
+  .pill-termine::before { background:var(--green); }
+  .pill-attente { background:rgba(255,92,26,0.12); color:var(--orange); }
+  .pill-attente::before { background:var(--orange); }
+  .pill-devis { background:rgba(107,110,117,0.15); color:var(--muted); }
+  .pill-devis::before { background:var(--muted); }
+  .amount { font-family:'Space Mono',monospace; font-size:13px; font-weight:700; }
+  .amount.green { color:var(--green); }
+  .reminder-list { display:flex; flex-direction:column; }
+  .reminder-item { display:flex; align-items:flex-start; gap:12px; padding:14px 20px; border-bottom:1px solid var(--border); transition:background 0.15s; cursor:pointer; }
+  .reminder-item:last-child { border-bottom:none; }
+  .reminder-item:hover { background:rgba(255,255,255,0.02); }
+  .reminder-dot { width:8px; height:8px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+  .reminder-content { flex:1; }
+  .reminder-title { font-size:13px; font-weight:500; color:var(--white); }
+  .reminder-meta { font-size:11px; color:var(--muted); margin-top:3px; font-family:'Space Mono',monospace; }
+  .reminder-date { font-size:10px; font-family:'Space Mono',monospace; color:var(--muted); white-space:nowrap; margin-top:2px; }
+  .reminder-date.urgent { color:var(--orange); }
+  .pipeline-row { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:16px; }
+  .pipeline-col { background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .pipeline-header { padding:10px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+  .pipeline-name { font-size:11px; font-family:'Space Mono',monospace; text-transform:uppercase; letter-spacing:1px; color:var(--muted); }
+  .pipeline-count { font-size:10px; font-family:'Space Mono',monospace; background:var(--border); padding:1px 6px; border-radius:4px; color:var(--muted); }
+  .pipeline-cards { padding:10px; display:flex; flex-direction:column; gap:7px; min-height:100px; }
+  .pipeline-card { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:10px 12px; cursor:grab; transition:all 0.15s; }
+  .pipeline-card:hover { border-color:var(--orange); transform:translateY(-1px); }
+  .pc-client { font-size:12px; font-weight:600; color:var(--white); }
+  .pc-moto { font-size:11px; color:var(--muted); margin-top:2px; }
+  .pc-amount { font-family:'Space Mono',monospace; font-size:11px; color:var(--orange); margin-top:6px; }
+
+  /* AI */
+  .ai-layout { display:grid; grid-template-columns:1fr 300px; flex:1; overflow:hidden; }
+  .chat-panel { display:flex; flex-direction:column; border-right:1px solid var(--border); overflow:hidden; }
+  .chat-header { padding:18px 24px 14px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .chat-header-top { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .ai-avatar-big { width:38px; height:38px; background:var(--ai-dim); border:1px solid rgba(167,139,250,0.4); border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .ai-name { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px; }
+  .ai-name span { color:var(--ai); }
+  .ai-status { font-size:11px; color:var(--green); font-family:'Space Mono',monospace; display:flex; align-items:center; gap:5px; }
+  .ai-status::before { content:''; width:6px; height:6px; background:var(--green); border-radius:50%; display:inline-block; }
+  .chips { display:flex; gap:7px; flex-wrap:wrap; }
+  .chip { background:var(--ai-dim); border:1px solid rgba(167,139,250,0.2); border-radius:20px; padding:5px 12px; font-size:11.5px; color:var(--ai); cursor:pointer; transition:all 0.15s; white-space:nowrap; font-family:'DM Sans',sans-serif; }
+  .chip:hover { background:rgba(167,139,250,0.2); }
+  .messages { flex:1; overflow-y:auto; padding:20px 24px; display:flex; flex-direction:column; gap:14px; }
+  .msg { display:flex; gap:10px; max-width:82%; animation:fadeIn 0.2s ease; }
+  .msg.user { align-self:flex-end; flex-direction:row-reverse; }
+  .msg.assistant { align-self:flex-start; }
+  .msg-av { width:28px; height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; margin-top:2px; }
+  .msg.assistant .msg-av { background:var(--ai-dim); border:1px solid rgba(167,139,250,0.25); }
+  .msg.user .msg-av { background:var(--orange-dim); border:1px solid rgba(255,92,26,0.25); }
+  .msg-bub { padding:11px 15px; border-radius:10px; font-size:13.5px; line-height:1.65; }
+  .msg.assistant .msg-bub { background:var(--card); border:1px solid var(--border); border-radius:2px 10px 10px 10px; }
+  .msg.user .msg-bub { background:var(--orange); color:white; border-radius:10px 2px 10px 10px; }
+  .typing-dots { display:flex; align-items:center; gap:4px; padding:4px 0; }
+  .typing-dots span { width:6px; height:6px; background:var(--ai); border-radius:50%; animation:bounce 1.2s infinite; }
+  .typing-dots span:nth-child(2) { animation-delay:.2s; }
+  .typing-dots span:nth-child(3) { animation-delay:.4s; }
+  .input-zone { padding:16px 24px; border-top:1px solid var(--border); flex-shrink:0; }
+  .input-row { display:flex; gap:10px; align-items:flex-end; }
+  .ai-input { flex:1; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:11px 15px; font-family:'DM Sans',sans-serif; font-size:13.5px; color:var(--white); resize:none; outline:none; min-height:44px; max-height:120px; line-height:1.5; transition:border-color 0.2s; }
+  .ai-input:focus { border-color:rgba(167,139,250,0.5); }
+  .ai-input::placeholder { color:var(--muted); }
+  .send-btn { width:44px; height:44px; background:var(--ai); border:none; border-radius:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; transition:all 0.15s; color:white; }
+  .send-btn:hover { background:#8b5cf6; }
+  .send-btn:disabled { background:var(--border); cursor:not-allowed; }
+  .input-hint { font-size:11px; color:var(--muted); margin-top:7px; font-family:'Space Mono',monospace; }
+  .quick-panel { padding:18px; display:flex; flex-direction:column; gap:12px; overflow-y:auto; }
+  .qp-head { font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:1.5px; margin-bottom:2px; }
+  .qp-sub { font-size:11px; color:var(--muted); font-family:'Space Mono',monospace; }
+  .quick-btn { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:12px 14px; cursor:pointer; transition:all 0.15s; text-align:left; width:100%; }
+  .quick-btn:hover { border-color:var(--ai); background:var(--ai-dim); }
+  .qb-icon { font-size:18px; margin-bottom:5px; }
+  .qb-title { font-size:13px; font-weight:600; color:var(--white); }
+  .qb-desc { font-size:11px; color:var(--muted); margin-top:2px; }
+  .divider { height:1px; background:var(--border); }
+  .ai-stat { display:flex; justify-content:space-between; font-size:12px; padding:3px 0; }
+  .ai-stat-label { color:var(--muted); }
+  .ai-stat-val { font-family:'Space Mono',monospace; font-size:11px; color:var(--ai); }
+
+  ::-webkit-scrollbar { width:4px; height:4px; }
+  ::-webkit-scrollbar-track { background:transparent; }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes bounce { 0%,60%,100% { transform:translateY(0); opacity:.4; } 30% { transform:translateY(-5px); opacity:1; } }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-text">MOTO<span>DESK</span></div>
+    <div class="logo-sub">CRM Garage v2.0</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="switchView('dashboard',this)"><span class="nav-icon">⚡</span> Tableau de bord</div>
+    <div class="nav-item" onclick="switchView('dashboard',this)"><span class="nav-icon">🏍️</span> Ordres de réparation <span class="badge">7</span></div>
+    <div class="nav-item" onclick="switchView('dashboard',this)"><span class="nav-icon">👥</span> Clients</div>
+    <div class="nav-item" onclick="switchView('dashboard',this)"><span class="nav-icon">📋</span> Devis <span class="badge green">3</span></div>
+    <div class="nav-section">IA & Automatisation</div>
+    <div class="nav-item ai-nav" onclick="switchView('ai',this)"><span class="nav-icon">🤖</span> Assistant IA <span class="badge ai">NEW</span></div>
+    <div class="nav-section">Gestion</div>
+    <div class="nav-item" onclick="switchView('dashboard',this)"><span class="nav-icon">🔔</span> Relances <span class="badge">5</span></div>
+    <div class="nav-item" onclick="switchView('dashboard',this)"><span class="nav-icon">🔧</span> Atelier</div>
+    <div class="nav-item" onclick="switchView('dashboard',this)"><span class="nav-icon">📊</span> Statistiques</div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="garage-info">
+      <div class="garage-avatar">🏍️</div>
+      <div>
+        <div class="garage-name">HLS Moto Lens</div>
+        <div class="garage-plan">Plan PRO + IA</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="page-title" id="ptitle">Tableau de bord</div>
+    <div class="search-bar"><span style="color:var(--muted);font-size:14px">🔍</span><input type="text" placeholder="Rechercher client, immat, modèle…"></div>
+    <button class="btn btn-ghost">📅 Avril 2026</button>
+    <button class="btn btn-ai" onclick="switchView('ai', document.querySelector('.ai-nav'))">🤖 Assistant IA</button>
+    <button class="btn btn-primary">+ Nouvel ordre</button>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div class="view active" id="v-dashboard">
+    <div class="content">
+      <div class="kpi-grid">
+        <div class="kpi-card" style="animation-delay:.05s"><div class="kpi-icon">💰</div><div class="kpi-label">CA ce mois</div><div class="kpi-value">18 450€</div><div class="kpi-delta up">▲ +12% vs mars</div></div>
+        <div class="kpi-card" style="animation-delay:.1s"><div class="kpi-icon">🏍️</div><div class="kpi-label">Ordres en cours</div><div class="kpi-value">7</div><div class="kpi-delta up">▲ 2 entrées aujourd'hui</div></div>
+        <div class="kpi-card" style="animation-delay:.15s"><div class="kpi-icon">👥</div><div class="kpi-label">Clients actifs</div><div class="kpi-value">143</div><div class="kpi-delta up">▲ +8 ce mois</div></div>
+        <div class="kpi-card" style="animation-delay:.2s"><div class="kpi-icon">⏱️</div><div class="kpi-label">Délai moyen atelier</div><div class="kpi-value">3.2J</div><div class="kpi-delta down">▼ +0.4j vs objectif</div></div>
+      </div>
+      <div class="section-card">
+        <div class="section-header"><div><div class="section-title">Pipeline Atelier</div><div class="section-sub">4 étapes • 9 ordres actifs</div></div><button class="btn btn-ghost" style="font-size:12px">Voir tout →</button></div>
+        <div class="pipeline-row">
+          <div class="pipeline-col"><div class="pipeline-header"><span class="pipeline-name">Devis envoyé</span><span class="pipeline-count">3</span></div><div class="pipeline-cards"><div class="pipeline-card"><div class="pc-client">Martin D.</div><div class="pc-moto">Yamaha MT-07 — Révision</div><div class="pc-amount">320 €</div></div><div class="pipeline-card"><div class="pc-client">Lemaire P.</div><div class="pc-moto">Honda CB500 — Freins</div><div class="pc-amount">180 €</div></div><div class="pipeline-card"><div class="pc-client">Naoui K.</div><div class="pc-moto">KTM Duke — Pneus</div><div class="pc-amount">240 €</div></div></div></div>
+          <div class="pipeline-col"><div class="pipeline-header"><span class="pipeline-name">Attente pièces</span><span class="pipeline-count">2</span></div><div class="pipeline-cards"><div class="pipeline-card"><div class="pc-client">Dubois S.</div><div class="pc-moto">BMW GS 1200 — Chaîne</div><div class="pc-amount">510 €</div></div><div class="pipeline-card"><div class="pc-client">Fournier A.</div><div class="pc-moto">Kawasaki Z900 — Embrayage</div><div class="pc-amount">680 €</div></div></div></div>
+          <div class="pipeline-col"><div class="pipeline-header"><span class="pipeline-name">En cours d'atelier</span><span class="pipeline-count">3</span></div><div class="pipeline-cards"><div class="pipeline-card" style="border-left:2px solid var(--orange)"><div class="pc-client">Renard T.</div><div class="pc-moto">Triumph Street — Moteur</div><div class="pc-amount">1 200 €</div></div><div class="pipeline-card"><div class="pc-client">Bernard L.</div><div class="pc-moto">Suzuki GSX — CT</div><div class="pc-amount">90 €</div></div><div class="pipeline-card"><div class="pc-client">Garcia M.</div><div class="pc-moto">Ducati Monster — Vidange</div><div class="pc-amount">145 €</div></div></div></div>
+          <div class="pipeline-col"><div class="pipeline-header"><span class="pipeline-name">Prêt à livrer</span><span class="pipeline-count">1</span></div><div class="pipeline-cards"><div class="pipeline-card" style="border-left:2px solid var(--green)"><div class="pc-client">Morel C.</div><div class="pc-moto">Honda Hornet — Révision</div><div class="pc-amount" style="color:var(--green)">290 €</div></div></div></div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="section-card">
+          <div class="section-header"><div><div class="section-title">Derniers ordres de réparation</div><div class="section-sub">7 en cours</div></div><button class="btn btn-ghost" style="font-size:12px">Filtrer ▾</button></div>
+          <div class="table-wrap"><table><thead><tr><th>Client / Moto</th><th>Intervention</th><th>Statut</th><th>Montant</th><th>Échéance</th></tr></thead><tbody>
+            <tr><td><div class="client-cell"><div class="avatar" style="background:rgba(255,92,26,.15);color:var(--orange)">RT</div><div><div class="client-name">Renard Thomas</div><div class="client-moto">Triumph Street Triple — AB-421-KL</div></div></div></td><td style="color:var(--muted);font-size:12px">Révision moteur complète</td><td><span class="status-pill pill-en-cours">En cours</span></td><td><span class="amount">1 200 €</span></td><td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--orange)">05/04</td></tr>
+            <tr><td><div class="client-cell"><div class="avatar" style="background:rgba(34,197,94,.12);color:var(--green)">MC</div><div><div class="client-name">Morel Christophe</div><div class="client-moto">Honda Hornet 600 — DC-802-AB</div></div></div></td><td style="color:var(--muted);font-size:12px">Révision + courroie</td><td><span class="status-pill pill-termine">Terminé</span></td><td><span class="amount green">290 €</span></td><td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">03/04</td></tr>
+            <tr><td><div class="client-cell"><div class="avatar" style="background:rgba(245,158,11,.12);color:var(--yellow)">FA</div><div><div class="client-name">Fournier Alice</div><div class="client-moto">Kawasaki Z900 — EL-553-MN</div></div></div></td><td style="color:var(--muted);font-size:12px">Remplacement embrayage</td><td><span class="status-pill pill-attente">Attente pièce</span></td><td><span class="amount">680 €</span></td><td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--yellow)">07/04</td></tr>
+            <tr><td><div class="client-cell"><div class="avatar" style="background:rgba(107,110,117,.15);color:var(--muted)">MD</div><div><div class="client-name">Martin Damien</div><div class="client-moto">Yamaha MT-07 — GH-110-RZ</div></div></div></td><td style="color:var(--muted);font-size:12px">Révision 10 000 km</td><td><span class="status-pill pill-devis">Devis envoyé</span></td><td><span class="amount">320 €</span></td><td style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">—</td></tr>
+          </tbody></table></div>
+        </div>
+        <div class="section-card">
+          <div class="section-header"><div><div class="section-title">Relances & rappels</div><div class="section-sub">5 actions en attente</div></div><span style="font-size:18px">🔔</span></div>
+          <div class="reminder-list">
+            <div class="reminder-item"><div class="reminder-dot" style="background:var(--orange)"></div><div class="reminder-content"><div class="reminder-title">Appeler Morel C. — Moto prête</div><div class="reminder-meta">Honda Hornet • 290 €</div></div><div class="reminder-date urgent">Aujourd'hui</div></div>
+            <div class="reminder-item"><div class="reminder-dot" style="background:var(--yellow)"></div><div class="reminder-content"><div class="reminder-title">Relance devis Martin D.</div><div class="reminder-meta">Sans réponse depuis 3 jours</div></div><div class="reminder-date urgent">+2j</div></div>
+            <div class="reminder-item"><div class="reminder-dot" style="background:var(--yellow)"></div><div class="reminder-content"><div class="reminder-title">CT Suzuki GSX — Résultat</div><div class="reminder-meta">Bernard L. • à confirmer</div></div><div class="reminder-date">07/04</div></div>
+            <div class="reminder-item"><div class="reminder-dot" style="background:var(--muted)"></div><div class="reminder-content"><div class="reminder-title">Rappel révision annuelle</div><div class="reminder-meta">Lemaire P. • Honda CB500</div></div><div class="reminder-date">10/04</div></div>
+            <div class="reminder-item"><div class="reminder-dot" style="background:var(--muted)"></div><div class="reminder-content"><div class="reminder-title">Commande pièces confirmée ?</div><div class="reminder-meta">Fournier A. • Kawasaki Z900</div></div><div class="reminder-date">12/04</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI VIEW -->
+  <div class="ai-view" id="v-ai">
+    <div class="ai-layout">
+      <div class="chat-panel">
+        <div class="chat-header">
+          <div class="chat-header-top">
+            <div class="ai-avatar-big">🤖</div>
+            <div>
+              <div class="ai-name">MOTO<span>AI</span></div>
+              <div class="ai-status">Assistant connecté • Claude Sonnet</div>
+            </div>
+          </div>
+          <div class="chips">
+            <div class="chip" onclick="chip('📄 Générer un devis moto')">📄 Générer un devis</div>
+            <div class="chip" onclick="chip('📊 Analyser mon CA du mois')">📊 Analyser mon CA</div>
+            <div class="chip" onclick="chip('✉️ Rédiger une relance client')">✉️ Relance client</div>
+            <div class="chip" onclick="chip('🔧 Checklist révision moto')">🔧 Checklist révision</div>
+            <div class="chip" onclick="chip('⚠️ Quelles alertes dois-je traiter en priorité ?')">⚠️ Alertes atelier</div>
+          </div>
+        </div>
+        <div class="messages" id="msgs">
+          <div class="msg assistant">
+            <div class="msg-av">🤖</div>
+            <div class="msg-bub">Bonjour ! Je suis <b>MotoAI</b>, votre assistant garage intelligent.<br><br>Je génère vos <b>devis en quelques secondes</b>, rédige vos relances clients, analyse votre activité et répond à toutes vos questions métier.<br><br>Que puis-je faire pour vous ? ✨</div>
+          </div>
+        </div>
+        <div class="input-zone">
+          <div class="input-row">
+            <textarea class="ai-input" id="ai-inp" placeholder="Ex: Génère un devis révision Yamaha MT-07 + changement pneus + chaîne…" rows="1" onkeydown="onKey(event)" oninput="resize(this)"></textarea>
+            <button class="send-btn" id="sbtn" onclick="send()">➤</button>
+          </div>
+          <div class="input-hint">Entrée pour envoyer • Shift+Entrée pour nouvelle ligne</div>
+        </div>
+      </div>
+
+      <div class="quick-panel">
+        <div><div class="qp-head">Actions rapides</div><div class="qp-sub">Cliquez pour lancer</div></div>
+        <button class="quick-btn" onclick="qa('Génère un devis professionnel complet pour une révision 10 000 km Yamaha MT-07 2021. Inclure : vidange huile + filtre, remplacement chaîne-couronne-pignon, deux pneus Michelin Road 5, nettoyage freins. Donne les prix unitaires HT, TVA 20%, et total TTC.')">
+          <div class="qb-icon">📄</div><div class="qb-title">Devis révision complète</div><div class="qb-desc">MT-07 • Chaîne • Pneus • Vidange</div>
+        </button>
+        <button class="quick-btn" onclick="qa('Rédige un SMS de relance chaleureux et professionnel pour Christophe Morel. Sa Honda Hornet 600 est prête à récupérer depuis hier. Montant : 290€. Nom du garage : HLS Moto, Lens. Téléphone : 03 21 XX XX XX.')">
+          <div class="qb-icon">✉️</div><div class="qb-title">SMS moto prête</div><div class="qb-desc">Morel C. — Honda Hornet 600</div>
+        </button>
+        <button class="quick-btn" onclick="qa('Analyse la performance de mon garage ce mois : CA 18 450€ (+12% vs mars), 7 ordres en cours, délai moyen atelier 3.2 jours (objectif 2.8j), 143 clients actifs, 3 devis sans réponse. Donne-moi 3 recommandations concrètes et actionnables pour améliorer.')">
+          <div class="qb-icon">📊</div><div class="qb-title">Analyse performance</div><div class="qb-desc">KPIs du mois + recommandations</div>
+        </button>
+        <button class="quick-btn" onclick="qa('Génère une checklist complète de révision 10 000 km pour Yamaha MT-07. Liste les points de contrôle, les pièces à remplacer systématiquement, et les vérifications de sécurité obligatoires.')">
+          <div class="qb-icon">🔧</div><div class="qb-title">Checklist 10 000 km</div><div class="qb-desc">Yamaha MT-07 — Points complets</div>
+        </button>
+        <button class="quick-btn" onclick="qa('Rédige un email de relance professionnelle pour Martin Damien qui n\'a pas répondu à un devis de révision 10 000 km (320€) pour sa Yamaha MT-07 depuis 3 jours. Ton cordial, sans pression, avec une incitation à confirmer rapidement.')">
+          <div class="qb-icon">📧</div><div class="qb-title">Relance devis expiré</div><div class="qb-desc">Martin D. — sans réponse 3j</div>
+        </button>
+        <div class="divider"></div>
+        <div>
+          <div class="qp-head" style="font-size:13px;margin-bottom:8px">Stats IA ce mois</div>
+          <div class="ai-stat"><span class="ai-stat-label">Devis générés</span><span class="ai-stat-val">24</span></div>
+          <div class="ai-stat"><span class="ai-stat-label">Relances rédigées</span><span class="ai-stat-val">18</span></div>
+          <div class="ai-stat"><span class="ai-stat-label">Temps économisé</span><span class="ai-stat-val">~4h</span></div>
+          <div class="ai-stat"><span class="ai-stat-label">Modèle IA</span><span class="ai-stat-val">Claude Sonnet</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+let history = [];
+let busy = false;
+
+function switchView(v, el) {
+  document.querySelectorAll('.view,.ai-view').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  document.getElementById(v === 'ai' ? 'v-ai' : 'v-dashboard').classList.add('active');
+  document.getElementById('ptitle').textContent = v === 'ai' ? 'Assistant IA' : 'Tableau de bord';
+  if (el) el.classList.add('active');
+}
+
+function resize(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+function onKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } }
+function chip(t) { document.getElementById('ai-inp').value = t; send(); }
+function qa(t) { document.getElementById('ai-inp').value = t; send(); }
+
+function addMsg(role, html) {
+  const c = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg ' + role;
+  d.innerHTML = `<div class="msg-av">${role === 'assistant' ? '🤖' : '👤'}</div><div class="msg-bub">${html}</div>`;
+  c.appendChild(d);
+  c.scrollTop = c.scrollHeight;
+}
+
+function showTyping() {
+  const c = document.getElementById('msgs');
+  const d = document.createElement('div');
+  d.className = 'msg assistant'; d.id = 'typing';
+  d.innerHTML = `<div class="msg-av">🤖</div><div class="msg-bub"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+  c.appendChild(d); c.scrollTop = c.scrollHeight;
+}
+
+function removeTyping() { const t = document.getElementById('typing'); if (t) t.remove(); }
+
+function fmt(t) {
+  return t
+    .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+    .replace(/\n/g, '<br>')
+    .replace(/^[-•]\s(.+)/gm, '<span style="display:block;padding-left:10px;margin:1px 0">• $1</span>');
+}
+
+function esc(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function send() {
+  if (busy) return;
+  const inp = document.getElementById('ai-inp');
+  const t = inp.value.trim();
+  if (!t) return;
+  inp.value = ''; inp.style.height = 'auto';
+  busy = true; document.getElementById('sbtn').disabled = true;
+
+  addMsg('user', esc(t));
+  history.push({ role: 'user', content: t });
+  showTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Tu es MotoAI, l'assistant IA intégré au CRM MotoDesk pour garages moto en France.
+Tu es expert en mécanique moto, gestion de garage, relation client, commerce et administration.
+Contexte : Garage HLS Moto, Lens (Nord). CA mensuel ~18 000€, 143 clients, 7 ordres en cours, objectif délai atelier 2.8 jours.
+
+Missions :
+- DEVIS : Structure avec lignes détaillées (pièces + main d'œuvre), prix unitaires HT, TVA 20%, total TTC. Sois précis sur les tarifs réalistes d'un garage moto français.
+- RELANCES : SMS/email professionnels, chaleureux, efficaces.
+- ANALYSE : Insights actionnables basés sur les chiffres fournis.
+- CHECKLIST : Listes détaillées et pratiques.
+- CONSEIL : Réponses métier directes et concrètes.
+
+Réponds toujours en français. Sois concis, direct et immédiatement utile. Pas de remplissage.`,
+        messages: history
+      })
+    });
+
+    const data = await res.json();
+    removeTyping();
+    const reply = data.content?.[0]?.text || 'Erreur : pas de réponse.';
+    history.push({ role: 'assistant', content: reply });
+    addMsg('assistant', fmt(reply));
+  } catch(e) {
+    removeTyping();
+    addMsg('assistant', '⚠️ Erreur de connexion. Réessayez.');
+  }
+
+  busy = false;
+  document.getElementById('sbtn').disabled = false;
+  document.getElementById('ai-inp').focus();
+}
+</script>
+</body>
+</html>
